@@ -29,8 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     mkdir('./processed/', 0777, true);
                 }
 
-                // Assuming you have a Python script named process_video.py
-                $command = escapeshellcmd("python3 process_video.py $dest_path $processedVideoPath");
+                // Assuming you have a Python script named Landmark_Processor.py
+                // script.py inputVideoFilePath processedVideoPath
+                $command = escapeshellcmd("python3 Landmark_Processor.py $dest_path $processedVideoPath");
                 shell_exec($command);
 
                 if (file_exists($processedVideoPath)) {
@@ -56,6 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <title>Video Processing Result</title>
 </head>
 <body>
-    <a href="index.php">Upload another video</a>
+    <a href="Video_Upload.php">Upload another video</a>
 </body>
 </html>
