@@ -19,7 +19,7 @@ frameWidth = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 frameHeight = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 currentFrame = 0
 
-plotFolderName = f'plots_{inputVideoPath}'
+plotFolderName = f'plots_{inputVideoFilePath}'
 
 # Get the parent directory of videoPath
 parentDir = os.path.dirname(inputVideoFilePath)

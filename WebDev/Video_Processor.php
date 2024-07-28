@@ -1,4 +1,6 @@
 <?php
+//$owner = 'skyvpsinno';
+//$group = 'skyvpsinno';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Check if file was uploaded without errors
     if (isset($_FILES['input_video']) && $_FILES['input_video']['error'] == 0) {
@@ -15,20 +17,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if (in_array($fileExtension, $allowedfileExtensions)) {
             // Directory where uploaded files will be stored
-            $uploadFileDir = './uploads/';
+            $uploadFileDir = '../uploads/';
             if (!is_dir($uploadFileDir)) {
                 mkdir($uploadFileDir, 0777, true);
             }
+            //chown('./uploads/', $owner);
+            //chgrp('./uploads/', $group);
             $dest_path = $uploadFileDir . $fileName;
 
             // Move the uploaded file to the server directory
             if (move_uploaded_file($fileTmpPath, $dest_path)) {
                 // Process the video (e.g., using a Python script)
-                $processedVideoPath = './processed/' . 'processed_' . $fileName;
-                if (!is_dir('./processed/')) {
-                    mkdir('./processed/', 0777, true);
-                }
-
+                $processedVideoPath = '../uploads/' . 'processed_' . $fileName;
+                //if (!is_dir('../uploads/processed/')) {
+                //    mkdir('../uploads/processed/', 0777, true);
+                //}
+                //chown('./processed/', $owner);
+                //chgrp('./processed/', $group);
                 // Assuming you have a Python script named Landmark_Processor.py
                 // script.py inputVideoFilePath processedVideoPath
                 $command = escapeshellcmd("python3 Landmark_Processor.py $dest_path $processedVideoPath");
@@ -41,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             } else {
                 echo "Error: There was an error moving the uploaded file.";
+                echo "File temp path " . $fileTmpPath;
             }
         } else {
             echo "Error: Upload failed. Allowed file types: " . implode(',', $allowedfileExtensions);
