@@ -5,10 +5,12 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import mediapipe as mp
+import datetime
 
-if len(sys.argv) == 3:
-    inputVideoFilePath = str(sys.argv[1])
-    processedVideoPath = int(sys.argv[2])
+if len(sys.argv) == 4:
+    inputVideoFilePath = r'{}'.format(sys.argv[1])
+    processedVideoDir = r'{}'.format(sys.argv[2])
+    videoName = r'{}'.format(sys.argv[3])
 else:
     print("ERROR: Not enough or too many input arguments.")
     exit()
@@ -19,15 +21,16 @@ frameWidth = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 frameHeight = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 currentFrame = 0
 
-plotFolderName = f'plots_{inputVideoFilePath}'
+plotFolderName = f'plots_example'
 
 # Get the parent directory of videoPath
-parentDir = os.path.dirname(inputVideoFilePath)
+#parentDir = os.path.dirname(processedVideoDir)
 
 # Create the directory for plots
-plotsDir = os.path.join(parentDir, plotFolderName)
+#plotsDir = os.path.join(parentDir, plotFolderName)
 
-os.makedirs(plotsDir, exist_ok=True)
+#os.makedirs(plotsDir, exist_ok=True)
+plotsDir = processedVideoDir
 
 BaseOptions = mp.tasks.BaseOptions
 FaceLandmarker = mp.tasks.vision.FaceLandmarker
@@ -94,7 +97,12 @@ frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 # Prepare output video writer with new dimensions
 graph_height = frame_height  # Assuming graphs have the same height as video frames
 new_frame_width = frame_width * 2  # Double width for video frame + graph image
-out = cv2.VideoWriter(processedVideoPath, cv2.VideoWriter_fourcc(*'mp4v'), fps, (new_frame_width, frame_height))
+
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
+#non-proj
+processedNormVideoPath = rf'{processedVideoDir}/{videoName}_Norm_{timestamp}.mp4'
+outNorm = cv2.VideoWriter(processedNormVideoPath, cv2.VideoWriter_fourcc(*'mp4v'), fps, (new_frame_width, frame_height))
 
 # Iterate through frames
 frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -115,11 +123,48 @@ for i in range(frame_count):
         combined_frame = np.concatenate((frame, graph_resized), axis=1)
         
         # Write the combined frame to the output video
-        out.write(combined_frame)
+        outNorm.write(combined_frame)
     
     else:
         print(f'Graph image {graph_path} does not exist.')
 
 # Release resources
 video.release()
-out.release()
+outNorm.release()
+
+
+
+
+#proj
+processedProjVideoPath = rf'{processedVideoDir}/{videoName}_Proj_{timestamp}.mp4'
+outProj = cv2.VideoWriter(processedProjVideoPath, cv2.VideoWriter_fourcc(*'mp4v'), fps, (new_frame_width, frame_height))
+
+
+
+# Iterate through frames
+frame_count = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+for i in range(frame_count):
+    ret, frame = video.read()
+    if not ret:
+        break
+    
+    # Assuming graph images are named in sequential order (e.g., 00001.png, 00002.png, ...)
+    graph_path = os.path.join(graphs_dir, f'frame_proj_{i + 1}.png')  # Adjust filename format as needed
+    
+    if os.path.exists(graph_path):
+        graph = cv2.imread(graph_path)
+        # Resize graph image to match video frame height
+        graph_resized = cv2.resize(graph, (frame_width, frame_height))
+        
+        # Concatenate frame and graph image horizontally
+        combined_frame = np.concatenate((frame, graph_resized), axis=1)
+        
+        # Write the combined frame to the output video
+        outProj.write(combined_frame)
+    
+    else:
+        print(f'Graph image {graph_path} does not exist.')
+
+# Release resources
+video.release()
+outProj.release()
