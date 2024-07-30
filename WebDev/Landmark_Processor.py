@@ -11,8 +11,17 @@ if len(sys.argv) == 4:
     inputVideoFilePath = r'{}'.format(sys.argv[1])
     processedVideoDir = r'{}'.format(sys.argv[2])
     videoName = r'{}'.format(sys.argv[3])
+    for i, arg in enumerate(sys.argv):
+        print(f'Arg index: {i}')
+        print(f'Raw arg: {arg}')
+        print(f'Literal arg {repr(sys.argv[i])}')
+        print()
 else:
-    print("ERROR: Not enough or too many input arguments.")
+    print(f"ERROR: Not enough or too many input arguments: {len(sys.argv)}")
+    for i, arg in enumerate(sys.argv):
+        print(f'Arg index: {i}')
+        print(f'{arg}')
+        print()
     exit()
 
 video = cv2.VideoCapture(inputVideoFilePath)
@@ -20,17 +29,18 @@ fps = video.get(cv2.CAP_PROP_FPS)
 frameWidth = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
 frameHeight = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 currentFrame = 0
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-plotFolderName = f'plots_example'
+plotFolderName = f'{videoName}_{timestamp}'
 
 # Get the parent directory of videoPath
 #parentDir = os.path.dirname(processedVideoDir)
 
 # Create the directory for plots
-#plotsDir = os.path.join(parentDir, plotFolderName)
+plotsDir = os.path.join(processedVideoDir, plotFolderName)
 
-#os.makedirs(plotsDir, exist_ok=True)
-plotsDir = processedVideoDir
+os.makedirs(plotsDir, exist_ok=True)
+#plotsDir = processedVideoDir
 
 BaseOptions = mp.tasks.BaseOptions
 FaceLandmarker = mp.tasks.vision.FaceLandmarker
@@ -41,6 +51,9 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 options = FaceLandmarkerOptions(
     base_options=BaseOptions(model_asset_path='face_landmarker.task'),
     running_mode=VisionRunningMode.VIDEO)
+
+normFrame = 'frame_'
+projFrame = 'frame_proj_'
 
 with FaceLandmarker.create_from_options(options) as landmarker:
   # The landmarker is initialized. Use it here.
@@ -62,7 +75,7 @@ with FaceLandmarker.create_from_options(options) as landmarker:
 
             
             xs , ys, zs, fig = lh.processFrame(xs, ys, zs, currentFrame, timestamp_ms)
-            fig.savefig(f'{plotsDir}/frame_{currentFrame}.png')
+            fig.savefig(f'{plotsDir}/{normFrame}{currentFrame}.png')
             plt.close(fig)
             plt.clf()
 
@@ -76,7 +89,7 @@ with FaceLandmarker.create_from_options(options) as landmarker:
             projYs = proj[:,1].tolist()
 
             xs , ys, zs, fig = lh.processFrame(projXs, projYs, zs, currentFrame, timestamp_ms)
-            fig.savefig(f'{plotsDir}/frame_proj_{currentFrame}.png')
+            fig.savefig(f'{plotsDir}/{projFrame}{currentFrame}.png')
             plt.close(fig)
             plt.clf()
         del image
@@ -98,7 +111,7 @@ frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 graph_height = frame_height  # Assuming graphs have the same height as video frames
 new_frame_width = frame_width * 2  # Double width for video frame + graph image
 
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
 
 #non-proj
 processedNormVideoPath = rf'{processedVideoDir}/{videoName}_Norm_{timestamp}.mp4'
@@ -112,7 +125,7 @@ for i in range(frame_count):
         break
     
     # Assuming graph images are named in sequential order (e.g., 00001.png, 00002.png, ...)
-    graph_path = os.path.join(graphs_dir, f'frame_{i + 1}.png')  # Adjust filename format as needed
+    graph_path = os.path.join(graphs_dir, f'{normFrame}{i + 1}.png')  # Adjust filename format as needed
     
     if os.path.exists(graph_path):
         graph = cv2.imread(graph_path)
@@ -129,10 +142,7 @@ for i in range(frame_count):
         print(f'Graph image {graph_path} does not exist.')
 
 # Release resources
-video.release()
 outNorm.release()
-
-
 
 
 #proj
@@ -149,7 +159,7 @@ for i in range(frame_count):
         break
     
     # Assuming graph images are named in sequential order (e.g., 00001.png, 00002.png, ...)
-    graph_path = os.path.join(graphs_dir, f'frame_proj_{i + 1}.png')  # Adjust filename format as needed
+    graph_path = os.path.join(graphs_dir, f'{projFrame}{i + 1}.png')  # Adjust filename format as needed
     
     if os.path.exists(graph_path):
         graph = cv2.imread(graph_path)

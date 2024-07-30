@@ -135,6 +135,7 @@ def processFrame(xIn: list, yIn: list, zIn: list, frame: int, timeStamp):
     xOut, yOut, zOut = scalePointsFixed(xOut, yOut, zIn)
 
     xOut, yOut = alignNormalizedPointsFixed(xOut, yOut)
+    xOut = reversePoints(xOut)
 
     fig = plt.figure()
     plt.scatter(xOut, yOut, color = 'blue', s = .5)

@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (move_uploaded_file($fileTmpPath, $dest_path)) {
                 // Process the video (e.g., using a Python script)
                 //$processedVideoDir = '../uploads/' . 'processed_' . $fileNameCmps[0];
-                $processedVideoDir = '../uploads/';
+                $processedVideoDir = '../uploads/processed/';
                 if (!is_dir($processedVideoDir)) {
                     mkdir($processedVideoDir, 0777, true);
                 }
@@ -37,14 +37,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 //chgrp('./processed/', $group);
                 // Assuming you have a Python script named Landmark_Processor.py
                 // script.py inputVideoFilePath processedVideoDir videoName
-                $command = escapeshellcmd("python Landmark_Processor.py $dest_path $processedVideoDir $fileNameCmps[0]");
-                shell_exec($command);
+                $command = escapeshellcmd("python Landmark_Processor.py \"$dest_path\" \"$processedVideoDir\" \"$fileNameCmps[0]\"");
+                
+                $output = shell_exec($command);
 
                 if (file_exists($processedVideoDir)) {
                     echo "Video processed successfully. <a href='$processedVideoDir'>Download processed video</a>";
+                    echo "Dest Vid Path: " . $dest_path; 
+                    echo "\n";
+                    echo "Processed Video Dir: " . $processedVideoDir;
+                    echo "\n";
+                    echo "File Name: " . $fileNameCmps[0];
+                    echo "\n";
+                    echo "Working Directory: " . getcwd();
+                    echo "Output " . $output;
                 } else {
                     echo "Error: Processed video could not be found.\n";
-                    echo $fileNameCmps[0];
+                    echo "\n";
+                    echo "Dest Vid Path: " . $dest_path; 
+                    echo "\n";
+                    echo "Processed Video Dir: " . $processedVideoDir;
+                    echo "\n";
+                    echo "File Name: " . $fileNameCmps[0];
+                    echo "\n";
+                    echo "Working Directory: " . getcwd();
+                    echo "Output " . $output;
                 }
             } else {
                 echo "Error: There was an error moving the uploaded file.";
