@@ -17,32 +17,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         if (in_array($fileExtension, $allowedfileExtensions)) {
             // Directory where uploaded files will be stored
-            $uploadFileDir = '../uploads/';
-            if (!is_dir($uploadFileDir)) {
-                mkdir($uploadFileDir, 0777, true);
-            }
-            //chown('./uploads/', $owner);
-            //chgrp('./uploads/', $group);
+            $uploadFileDir = 'uploads/';
             $dest_path = $uploadFileDir . $fileName;
             
             // Move the uploaded file to the server directory
             if (move_uploaded_file($fileTmpPath, $dest_path)) {
                 // Process the video (e.g., using a Python script)
-                //$processedVideoDir = '../uploads/' . 'processed_' . $fileNameCmps[0];
-                $processedVideoDir = '../uploads/processed/';
-                if (!is_dir($processedVideoDir)) {
-                    mkdir($processedVideoDir, 0777, true);
-                }
-                //chown('./processed/', $owner);
-                //chgrp('./processed/', $group);
+                
+                $processedVideoDir = 'uploads/';
                 // Assuming you have a Python script named Landmark_Processor.py
                 // script.py inputVideoFilePath processedVideoDir videoName
-                $command = escapeshellcmd("python Landmark_Processor.py \"$dest_path\" \"$processedVideoDir\" \"$fileNameCmps[0]\"");
+                $command = escapeshellcmd("python3 Landmark_Processor.py \"$dest_path\" \"$processedVideoDir\" \"$fileNameCmps[0]\"");
                 
                 $output = shell_exec($command);
 
                 if (file_exists($processedVideoDir)) {
                     echo "Video processed successfully. <a href='$processedVideoDir'>Download processed video</a>";
+                    echo "Output: " . $output;
+                    echo "Command:  " . $command;
                     echo "Dest Vid Path: " . $dest_path; 
                     echo "\n";
                     echo "Processed Video Dir: " . $processedVideoDir;
@@ -50,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     echo "File Name: " . $fileNameCmps[0];
                     echo "\n";
                     echo "Working Directory: " . getcwd();
-                    echo "Output " . $output;
                 } else {
                     echo "Error: Processed video could not be found.\n";
                     echo "\n";
@@ -61,11 +52,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     echo "File Name: " . $fileNameCmps[0];
                     echo "\n";
                     echo "Working Directory: " . getcwd();
-                    echo "Output " . $output;
                 }
             } else {
                 echo "Error: There was an error moving the uploaded file.";
                 echo "File temp path " . $fileTmpPath;
+                echo "Dest path " . $dest_path;
             }
         } else {
             echo "Error: Upload failed. Allowed file types: " . implode(',', $allowedfileExtensions);

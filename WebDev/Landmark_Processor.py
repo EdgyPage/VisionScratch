@@ -33,14 +33,10 @@ timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 plotFolderName = f'{videoName}_{timestamp}'
 
-# Get the parent directory of videoPath
-#parentDir = os.path.dirname(processedVideoDir)
-
 # Create the directory for plots
 plotsDir = os.path.join(processedVideoDir, plotFolderName)
 
 os.makedirs(plotsDir, exist_ok=True)
-#plotsDir = processedVideoDir
 
 BaseOptions = mp.tasks.BaseOptions
 FaceLandmarker = mp.tasks.vision.FaceLandmarker
@@ -114,7 +110,7 @@ new_frame_width = frame_width * 2  # Double width for video frame + graph image
 
 
 #non-proj
-processedNormVideoPath = rf'{processedVideoDir}/{videoName}_Norm_{timestamp}.mp4'
+processedNormVideoPath = rf'{plotsDir}/{videoName}_Norm_{timestamp}.mp4'
 outNorm = cv2.VideoWriter(processedNormVideoPath, cv2.VideoWriter_fourcc(*'mp4v'), fps, (new_frame_width, frame_height))
 
 # Iterate through frames
@@ -143,10 +139,22 @@ for i in range(frame_count):
 
 # Release resources
 outNorm.release()
+video.release()
 
 
 #proj
-processedProjVideoPath = rf'{processedVideoDir}/{videoName}_Proj_{timestamp}.mp4'
+# Open the input video file
+video = cv2.VideoCapture(inputVideoFilePath)
+fps = video.get(cv2.CAP_PROP_FPS)
+frame_width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
+frame_height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+
+#640x480
+# Prepare output video writer with new dimensions
+graph_height = frame_height  # Assuming graphs have the same height as video frames
+new_frame_width = frame_width * 2  # Double width for video frame + graph image
+
+processedProjVideoPath = rf'{plotsDir}/{videoName}_Proj_{timestamp}.mp4'
 outProj = cv2.VideoWriter(processedProjVideoPath, cv2.VideoWriter_fourcc(*'mp4v'), fps, (new_frame_width, frame_height))
 
 
@@ -176,5 +184,5 @@ for i in range(frame_count):
         print(f'Graph image {graph_path} does not exist.')
 
 # Release resources
-video.release()
 outProj.release()
+video.release()
