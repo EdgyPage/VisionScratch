@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+</head>
+<body>
+    <h1>Emotion Detection from Video Stream</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <p id="emotion">Detected Emotion: None</p>
+    
+    <script>
+        const video = document.getElementById('video');
+        const emotionText = document.getElementById('emotion');
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        
+        // Access the webcam stream
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error accessing the camera: ', err);
+            });
+
+        // Capture frames and send them to the server every second
+        setInterval(() => {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataUrl = canvas.toDataURL('image/jpeg');
+
+            fetch('process_frame.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Update the webpage with the detected emotion
+                emotionText.textContent = `Detected Emotion: ${data.emotion}`;
+            })
+            .catch(err => {
+                console.error('Error:', err);
+            });
+        }, 1000); // Send frame every second
+    </script>
+</body>
+</html>
