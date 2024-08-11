@@ -4,6 +4,12 @@
 import sys
 import math
 from statistics import mean 
+import cv2
+import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
+import Landmark_Helper as lh
+
 
 def createCentroid(xIn: list, yIn: list):
     avgX = mean(xIn)
@@ -24,7 +30,7 @@ def checkSmile(xIn: list, threshold = .36):
     else:
         return f'No Smile | Lip Width / Jaw Width: {ratio}'
     
-def checkFrown(xIn: list, yIn: list, threshold = .36):
+def checkFrown(xIn: list, yIn: list):
     leftPoi = [107, 55]
     rightPoi = [336, 285]
     leftCentroid = createCentroid([xIn[x] for x in leftPoi], [yIn[y] for y in leftPoi])
@@ -47,18 +53,44 @@ def checkFrown(xIn: list, yIn: list, threshold = .36):
     else:
         return f'No Frown | L-R Brow -> Nose Dist: {leftBrowDistToNose}-{rightBrowDistToNose}'
 
-if len(sys.argv) == 2:
-    inputFramePath = r'{}'.format(sys.argv[1])
-    for i, arg in enumerate(sys.argv):
-        print(f'Arg index: {i}')
-        print(f'Raw arg: {arg}')
-        print(f'Literal arg {repr(sys.argv[i])}')
-        print()
-else:
-    print(f"ERROR: Not enough or too many input arguments: {len(sys.argv)}")
-    for i, arg in enumerate(sys.argv):
-        print(f'Arg index: {i}')
-        print(f'{arg}')
-        print()
-    exit()
-     
+def processImage(imagePath: str):
+    emotionString = ''
+    base_options = python.BaseOptions(model_asset_path='face_landmarker_v2_with_blendshapes.task')
+    options = vision.FaceLandmarkerOptions(base_options=base_options,
+                                       output_face_blendshapes=True,
+                                       output_facial_transformation_matrixes=True,
+                                       num_faces=1)
+    detector = vision.FaceLandmarker.create_from_options(options)
+    image = mp.Image.create_from_file(imagePath)
+
+    # STEP 4: Detect face landmarks from the input image.
+    detection_result = detector.detect(image)
+    if detection_result.face_landmarks == 1:
+        xs = [landmark.x for landmark in detection_result.face_landmarks[0]]
+        ys = [landmark.y for landmark in detection_result.face_landmarks[0]]
+        zs = [landmark.z for landmark in detection_result.face_landmarks[0]]
+
+        xs, ys = lh.affineTransform(xs, ys)
+        xs, ys, zs = lh.scalePointsFixed(xs, ys, zs)
+        xs, ys = lh.alignNormalizedPointsFixed(xs, ys)
+
+        smileResult = checkSmile(xs)
+        frownResult = checkFrown(xs, ys)
+
+        emotion = smileResult +'\n' + frownResult
+        return emotion
+    else:
+        return 'Not exactly one face detected'
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2:
+        inputFramePath = r'{}'.format(sys.argv[1])
+        emotion = processImage(inputFramePath)
+        print(emotion)
+    else:
+        print(f"ERROR: Not enough or too many input arguments: {len(sys.argv)}")
+        for i, arg in enumerate(sys.argv):
+            print(f'Arg index: {i}')
+            print(f'{arg}')
+            print()
+        exit()
